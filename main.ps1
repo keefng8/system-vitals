@@ -31,7 +31,26 @@ if ($usedPct -ge 90) {
     Write-Output ("Memory is tight - {0} percent used, with {1} the biggest. CPU {2} percent, {3}." -f `
         $usedPct, $top, $cpu, $upText)
 } elseif ($cpu -ge 85) {
-    $top = (Get-Process | Sort-Object CPU -Descending | Select-Object -First 1).ProcessName
+    # Get-Process exposes .CPU as total processor SECONDS since the process
+    # started - a lifetime total, not a rate. Sorting by it names whatever has
+    # been running longest, which is usually an idle system service. Two
+    # samples half a second apart give actual current usage.
+    $before = @{}
+    foreach ($p in Get-Process -ErrorAction SilentlyContinue) {
+        if ($null -ne $p.CPU) { $before[$p.Id] = $p.CPU }
+    }
+    Start-Sleep -Milliseconds 500
+
+    $busiest = $null
+    $bestDelta = 0
+    foreach ($p in Get-Process -ErrorAction SilentlyContinue) {
+        if ($null -ne $p.CPU -and $before.ContainsKey($p.Id)) {
+            $delta = $p.CPU - $before[$p.Id]
+            if ($delta -gt $bestDelta) { $bestDelta = $delta; $busiest = $p.ProcessName }
+        }
+    }
+    $top = if ($busiest) { $busiest } else { 'nothing in particular' }
+
     Write-Output ("CPU is busy at {0} percent, mostly {1}. Memory {2} percent used, {3}." -f `
         $cpu, $top, $usedPct, $upText)
 } else {

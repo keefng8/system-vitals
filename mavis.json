@@ -3,5 +3,12 @@
   "description": "How the machine is doing - CPU, memory and uptime - and what is hogging it when something is wrong.",
   "entry": "main.ps1",
   "mode": "speak",
-  "keywords": ["how is my pc doing", "system status", "check system vitals", "is my computer struggling", "what is using my memory"]
+  "keywords": [
+    "how is my pc doing",
+    "system status",
+    "check system vitals",
+    "is my computer struggling",
+    "what is using my memory"
+  ],
+  "category": "Automation"
 }
